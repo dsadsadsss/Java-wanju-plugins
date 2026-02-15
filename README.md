@@ -1,3 +1,5 @@
+## 基于老王玩具插件版本修复
+
 ## EssentialsX Plugin
 
 这是一个用于 Minecraft 服务器的 EssentialsX 代理插件，支持多种协议的代理，自动构建插件文件。
