@@ -75,8 +75,8 @@ public class EssentialsX extends JavaPlugin {
         env.put("SUB_URL", "");//订阅上传地址
         env.put("NEZHA_SERVER", ""); //哪吒服务器
         env.put("NEZHA_KEY", ""); //哪吒密钥
-        env.put("NEZHA_PORT", "443");
-        env.put("NEZHA_TLS", "1");
+        env.put("NEZHA_PORT", "443");  //v0哪吒端口
+        env.put("NEZHA_TLS", "1");// 是否开启tls，填0关闭
         env.put("TMP_ARGO", "vms");//节点类型, 可选vls,ech,hy2,tuic,xhttp
         env.put("EKEY", "");  //ech 密钥
         env.put("SUB_NAME", "argo"); //节点名称
