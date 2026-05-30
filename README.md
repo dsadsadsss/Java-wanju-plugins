@@ -4,7 +4,9 @@
 
 基于老王玩具JAVA插件魔改
 
-配合仓库根目录RandomBots-2.2.0.jar假人插件，上传到paper插件目录一起使用，假人需要设置server.properties文件中的online-mode=false
+配合仓库根目录RandomBots-2.2.0.jar假人插件，上传到paper插件目录一起使用
+
+假人需要设置server.properties文件中的online-mode=false，可以在RandomBots/config.yml设置假人数和是否显示日志
 
  ##### **使用说明**
 
